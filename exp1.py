@@ -1,87 +1,106 @@
-"""
-Tic-Tac-Toe Game
+import math
+import time
 
-This program implements a simple two-player Tic-Tac-Toe game where two human players take turns
-entering their moves. The game checks for wins or draws after each move.
+board = [' ' for _ in range(9)]
 
-The game board is a 3x3 grid. Players enter row and column numbers (0-2) to place their marks.
-Player X goes first, followed by Player O.
+def print_board():
+    for i in range(0, 9, 3):
+        print(f'| {board[i]} | {board[i+1]} | {board[i+2]} |')
 
-Rules:
-- Players alternate turns.
-- A player wins by getting three of their marks in a row, column, or diagonal.
-- If the board is full and no one has won, it's a draw.
-"""
+def is_winner(player):
+    win_conditions = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ]
 
-def print_board(board):
-    """
-    Prints the current state of the Tic-Tac-Toe board.
-
-    Args:
-    board (list of lists): 3x3 grid representing the board.
-    """
-    print("\nCurrent board:")
-    for row in board:
-        print(' | '.join(row))
-    print()
-
-def is_winner(board, player):
-    """
-    Checks if a player has won the game.
-
-    Args:
-    board (list of lists): 3x3 grid representing the board.
-    player (str): 'X' or 'O', the player's mark.
-
-    Returns:
-    bool: True if the player has won, False otherwise.
-    """
-    # Check rows
-    for row in board:
-        if all(cell == player for cell in row):
+    for condition in win_conditions:
+        if board[condition[0]] == board[condition[1]] == board[condition[2]] == player:
             return True
-    # Check columns
-    for col in range(3):
-        if all(board[row][col] == player for row in range(3)):
-            return True
-    # Check diagonals
-    if all(board[i][i] == player for i in range(3)) or all(board[i][2-i] == player for i in range(3)):
-        return True
-    return False
 
-def is_full(board):
-    """
-    Checks if the board is full (no empty spaces).
+    return  False
 
-    Args:
-    board (list of lists): 3x3 grid representing the board.
+def is_board_full():
+    return ' ' not in board
 
-    Returns:
-    bool: True if the board is full, False otherwise.
-    """
-    return all(cell != ' ' for row in board for cell in row)
+def minimax(is_maximizing):
+    if is_winner('O'):
+        return 1
+    elif is_winner('X'):
+        return -1
+    elif is_board_full():
+        return 0
 
-def main():
-    board = [[' ' for _ in range(3)] for _ in range(3)]
-    players = ['X', 'O']
-    moves = [(0, 0), (0, 1), (1, 1), (2, 2), (0, 2)]  # Pre-defined moves for demonstration
-    
-    turn = 0
-    for row, col in moves:
-        print_board(board)
-        current_player = players[turn]
-        board[row][col] = current_player
-        
-        if is_winner(board, current_player):
-            print_board(board)
-            print(f"Player {current_player} wins!")
+    if is_maximizing:
+        best_score = -math.inf
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'O'
+                score = minimax(False)
+                board[i] = ' '
+                best_score = max(score, best_score)
+        return best_score
+    else:
+        best_score = math.inf
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = 'X'
+                score = minimax(True)
+                board[i] = ' '
+                best_score = min(score, best_score)
+        return best_score
+
+def best_move():
+    best_score = -math.inf
+    move = 0
+
+    for i in range(9):
+        if board[i] == ' ':
+            board[i] = 'O'
+            score = minimax(False)
+            board[i] = ' '
+            if score > best_score:
+                best_score = score
+                move = i
+    return move
+
+def player_move():
+    while True:
+        move = int(input('Enter move between (1-9):')) - 1
+        if move < 0 or move > 8:
+            print('Invalid move')
+        elif board[move] != ' ':
+            print('Invalid move')
+        else:
+            board[move] = 'X'
             break
-        elif is_full(board):
-            print_board(board)
-            print("Draw!")
-            break
-        
-        turn = 1 - turn
 
-if __name__ == "__main__":
-    main()
+
+print("Welcome to Tic-tac-Toe! You are 'X' and AI is 'O'")
+print_board()
+
+while True:
+    player_move()
+    print_board()
+
+    if is_winner('X'):
+        print('You win!')
+        break
+    elif is_board_full():
+        print("It's a tie!")
+        break
+
+    print("AI is making a move...")
+    time.sleep(2)
+    ai_move = best_move()
+    board[ai_move] = 'O'
+    print_board()
+
+    if is_winner('O'):
+        print('AI wins!')
+        break
+    elif is_board_full():
+        print("It's a tie!")
+        break
+
+
